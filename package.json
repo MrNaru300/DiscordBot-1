@@ -14,8 +14,7 @@
     "node-opus": "^0.3.1",
     "opusscript": "^0.0.6",
     "speech-to-text": "^2.9.1",
-    "windows-build-tools": "^5.1.0",
-    "youtube-playlist-info": "^1.1.2",
     "ytdl-core": "^0.28.3"
-  }
+  },
+  "devDependencies": {}
 }

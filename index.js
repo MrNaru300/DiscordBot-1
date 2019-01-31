@@ -2,7 +2,6 @@ const config = require("./configs.json")
 const Discord = require("discord.js");
 const fs = require("fs");
 
-
 var servers = {};
 var bot = new Discord.Client();
 
