@@ -1,0 +1,21 @@
+const {key} = require("../configs.json");
+
+exports.run = (bot, message, args, server) => {
+    if (!args[0])
+        return message.channel.send("precisa-se de uma criptografia")
+    if (!args[1])
+        return message.channel.send("precisa-se de um texto");
+
+    let cypher = args.shift();
+    let text = args.join(" ");
+
+    
+    switch(cypher) {
+        case "base64":
+        case "b64":
+            message.reply();
+            break;
+        default:
+            message.reply("Criptografia não encontrada!");
+    }
+}
