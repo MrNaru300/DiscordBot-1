@@ -5,6 +5,7 @@ const fs = require("fs")
 exports.run = async (bot, message, args) => {
 
 	fs.mkdirSync("./images/avatars", {recursive:true});
+	fs.mkdirSync("./images/pingpong", {recursive:true});
 
 	let userPath = `./images/avatars/${message.author.id}.png`;
 	let url = message.author.avatarURL || message.author.defaultAvatarURL;
