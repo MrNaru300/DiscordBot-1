@@ -6,12 +6,34 @@ var servers = {};
 var bot = new Discord.Client();
 
 const Logger = {
+	logFile: null,
+	save(message) {
+		//Se o arquivo de log não foi criado, crie um novo
+		
+		if (!this.logFile) {
+			//Se a pasta logs não existe, crie ela
+			if (!fs.existsSync("./logs"))
+				fs.mkdirSync("./logs", err => {console.log(err)});
+			
+			let lastLog = 1;
+			//Quantos logs tem na pasta
+			for (let file in fs.readdirSync(config.paths.logs)) {
+				let type = file.split(".");
+				if (type == "log");
+					lastLog++;
+			}
+			this.logFile = config.paths.logs + "Log_" + lastLog + ".log";
+		}
+		//Escrever o Arquivo
+		fs.appendFileSync(this.logFile, this.time() + message + "\n");
+	},
 	time() {
 		let time = new Date()
 		return `[${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}]`
 	},
 	log(message) {
 		console.log(this.time() + message);
+		this.save(message);
 	},
 	warn(message) {
 		console.warn(this.time() + message);
