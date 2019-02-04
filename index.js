@@ -36,20 +36,25 @@ const Logger = {
 		this.save(message);
 	},
 	warn(message) {
-		console.warn(this.time() + message);
+		let prefix = "[Warning]";
+		console.warn(this.time() + prefix + message);
+		this.save(prefix + message);
 	},
 	error(message) {
-		console.log(this.time() + message);
+		let prefix = "[Error]";
+		console.log(this.time() + prefix + message);
+		this.save(prefix + message);
 	},
 	rawLog(message) {
 		console.log(message);
+		this.save(message)
 	}
 	
 }
 
 //Quando iniciar
 bot.on("ready", () => {
-	Logger.log("\n--------------------------Iniciado--------------------------\n");
+	Logger.log("Iniciado");
 	//Mostrar os servers no electron
 	bot.user.setActivity(config.key+"help");
 })
