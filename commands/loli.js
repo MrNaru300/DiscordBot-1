@@ -1,4 +1,4 @@
-exports.run = (_bot, message, _args, _server, _Logger) => {
+exports.run = ({message, Logger}) => {
     function DeleteAlt(message, send) {
         if (send) message.channel.send(send);
         if (message.deletable) message.delete();
@@ -15,7 +15,7 @@ exports.run = (_bot, message, _args, _server, _Logger) => {
         })
         .catch((err) => {
             DeleteAlt(alt, ":oncoming_police_car: A policia descobriu as lolis. CORRE!"); 
-            console.log(err)
+            Logger.log(err)
         });
     });
     

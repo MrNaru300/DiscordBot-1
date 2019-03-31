@@ -1,4 +1,4 @@
-exports.run = (bot, message, args, server) => {
+exports.run = ({message, args}) => {
     if (!message.member.hasPermission("MANAGE_MESSAGES"))
        return message.reply("Você não tem permição para isso");
 

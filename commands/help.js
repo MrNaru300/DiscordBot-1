@@ -1,6 +1,6 @@
 const fs = require("fs")
 
-exports.run = (bot, message, args, server, Logger) => {
+exports.run = ({message, args Logger}) => {
 	let info = "";
 
 

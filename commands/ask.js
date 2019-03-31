@@ -1,5 +1,5 @@
 
-exports.run = (bot, message, args, server) => {
+exports.run = ({message, args}) => {
     if (!args[0])
         return message.channel.send("Precisa-se de uma pergunta")
     

@@ -1,8 +1,6 @@
-const configs = require("../configs.json")
-
-exports.run = (bot, message, args, server) => {
+exports.run = ({message, args}) => {
     
-    let alt = args.join("").split(/ *\| */g).filter(val => {return val}); //Alternativas
+    let alt = args.join(" ").split(/ *\| */g).filter(val => {return val}); //Alternativas
     
     if (!alt[1])
         return message.channel.send("Precisa-se de 2 alternativas");
