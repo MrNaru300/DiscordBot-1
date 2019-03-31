@@ -2,7 +2,7 @@
 const httpRequest = require("../utilits/httpRequest.js");
 const fs = require("fs")
 
-exports.run = async (bot, message, args) => {
+exports.run = async ({message}) => {
 
 	fs.mkdirSync("./images/avatars", {recursive:true});
 	fs.mkdirSync("./images/pingpong", {recursive:true});

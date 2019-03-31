@@ -2,9 +2,10 @@ const config = require("./configs.json")
 const Discord = require("discord.js");
 const fs = require("fs");
 
-var servers = {};
+var servers = [];
 var bot = new Discord.Client();
 
+//Mostra o log no console
 const Logger = {
 	logFile: null,
 	save(message) {
@@ -27,6 +28,7 @@ const Logger = {
 		//Escrever o Arquivo
 		fs.appendFileSync(this.logFile, this.time() + message + "\n");
 	},
+	//Retorna um string de hh/mm/ss
 	time() {
 		let time = new Date()
 		return `[${time.getHours()}:${time.getMinutes()}:${time.getSeconds()}]`
@@ -44,12 +46,7 @@ const Logger = {
 		let prefix = "[Error]";
 		console.log(this.time() + prefix + message);
 		this.save(prefix + message);
-	},
-	rawLog(message) {
-		console.log(message);
-		this.save(message)
 	}
-	
 }
 
 //Quando iniciar
@@ -67,15 +64,17 @@ bot.on("message", message => {
 	//Configuração do server
 	if (!servers[message.guild.id]) servers[message.guild.id] = {
 		music: {playlist: [], dispatcher: null, playingMusic: null, lastMessage: null},
+		id: message.guild.id,
+		name: message.guild.name
 	};
-	
+
 	try {
 		let args = message.content.slice(config.key.length).trim().split(/ +/g);
 		let command = args.shift().toLowerCase();
 		let server = servers[message.guild.id];
 		//Verifica se o comando existe e o roda
 		if (fs.existsSync(`./commands/${command}.js`)) {
-			require(`./commands/${command}.js`).run(bot, message, args, server, Logger);
+			require(`./commands/${command}.js`).run({bot, message, args, server, Logger, servers});
 		}
 	}
 	catch (err) {
@@ -83,6 +82,21 @@ bot.on("message", message => {
 	}
 });
 
+
+//Error
+process.on("uncaughtException", err => {
+	Logger.error(`Erro ${(!err.name)? err.name : "indefinido"}:\n ------${err.message}-----\n ${(err.stack)? err.stack : ""}`);
+	process.exit(-1);
+});
+
+//Remover o server da RAM se deletado
+bot.on("guildDelete", guild => {
+	let deleted = servers.filter((v) => {return guild.id !== v.id});
+	Logger.log(`Server removido: ${deleted.name}, ID: ${deleted.id}`);
+
+	let index = servers.findIndex(deleted.id);
+	delete servers[index];
+})
 
 //Disconectado
 bot.on("disconnect", e => {
@@ -101,7 +115,7 @@ bot.on("reconnecting", () => {
 
 //Erro no bot
 bot.on("error", err => {
-	Logger.log(`Erro ${(err.name)? err.name : "indefinido"}:\n ------${err.message}-----\n ${(err.stack)? err.stack : ""}`);
+	Logger.error(`Erro ${(err.name)? err.name : "indefinido"}:\n ------${err.message}-----\n ${(err.stack)? err.stack : ""}`);
 })
 
 //Avisos no bot

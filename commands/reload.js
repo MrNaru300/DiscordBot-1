@@ -1,7 +1,7 @@
 const configs = require("../configs.json")
 const fs = require("fs");
 
-exports.run = (_bot, message, args, _server, Logger) => {
+exports.run = ({message, args, Logger}) => {
 	if (!args[0]) return message.reply("Presisa-se de 1 argumento");
 	if (message.author.id == configs.admins[message.author.username])
 		try {

@@ -3,7 +3,7 @@ const httpRequest = require("../utilits/httpRequest.js");
 const configs = require("../configs.json");
 
 
-exports.run = async (bot, message, args, server, Logger) => {
+exports.run = async ({message, args, server, Logger}) => {
 	
 	let sM = server.music;
 
@@ -69,12 +69,12 @@ exports.run = async (bot, message, args, server, Logger) => {
 				"author": {
 					"name": "Lista de Músicas",
 					"icon_url": "https://yt3.ggpht.com/a-/AAuE7mCRnX1QiX2U8rv05JW4zbaJMB80Y5eWI1HfTg=s900-mo-c-c0xffffffff-rj-k-no"
-				  },
+				},
 				"description": "-------------------",
 				"footer": {"text": "Digite help para mostra a lista de comandos"},
 				"color": 15214375,
 				"fields": [ 
-				  ]
+				]
 			}
 		};
 		//Tem musica na play list
@@ -133,7 +133,7 @@ exports.run = async (bot, message, args, server, Logger) => {
 
 		//tocar a musica
 		case "p":
-		case "play" :
+		case "play" : {
 			if (sM.playingMusic) {
 				return ListMusics();
 			}
@@ -152,11 +152,12 @@ exports.run = async (bot, message, args, server, Logger) => {
 			})
 			
 			break;
+		}
 		
 		//adicionar uma musica a playlist
 		case "+":
 		case "a":
-		case "add":
+		case "add": {
 			if (!args[1])
 				return AutoDelete("Precisa-se de uma URL do youtube");
 			if (!ytdl.validateURL(args[1]))
@@ -165,7 +166,8 @@ exports.run = async (bot, message, args, server, Logger) => {
 			//tags da url do youtube
 			let tags = args[1].split("?")[1].split("&");
 
-			let temp = []
+			let temp = [];
+
 			for (let tag of tags) {
 				let split = tag.split("=");
 				temp[split[0]] = split[1];
@@ -177,7 +179,7 @@ exports.run = async (bot, message, args, server, Logger) => {
 
 				//API do youtube para playlists
 				httpRequest(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${tags["list"]}&key=${configs.ytKey}`)
-				.catch((err) => {AutoDelete("Video não encontrado")})
+				.catch(() => {AutoDelete("Video não encontrado")})
 				.then( async (playlist) => {
 					if (playlist.errors)
 						return AutoDelete("Video não encontrado");
@@ -196,11 +198,12 @@ exports.run = async (bot, message, args, server, Logger) => {
 				AutoDelete("Video não encontrado");
 			}
 			break;
+		}
 		
 		//remover uma musica da playlist
 		case "-":
 		case "r":
-		case "remove" :
+		case "remove" : {
 			if (!args[1])
 				return AutoDelete("Precisa-se do número da música na playlist");
 			let index = parseInt(args[1])
@@ -212,22 +215,24 @@ exports.run = async (bot, message, args, server, Logger) => {
 			ListMusics();
 			
 			break;
+		}
 		
 		//ir para a proxima musica
 		case "n":
 		case "next":
 		case "sk":
-		case "skip":
+		case "skip": {
 			if (sM.playingMusic)
 				sM.dispatcher.end();
 			else 
 				sM.playlist.shift();
 				ListMusics();
 			break;
-		
+		}
+
 		//deletar a playlist
 		case "q":
-		case "quit" :
+		case "quit" : {
 			if (sM.lastMessage && sM.lastMessage.deletable) sM.lastMessage.delete();
 			if (message.deletable) message.delete();
 
@@ -240,22 +245,29 @@ exports.run = async (bot, message, args, server, Logger) => {
 
 			
 			break;
+
+		}
 		case "s":
-		case "stop":
+		case "stop": {
 			if (!sM.playingMusic)
 				AutoDelete("Nenhuma música na lista");
 			sM.playlist.unshift(sM.playingMusic);
 			break;
+		}
+
 		//listar as musicas na playlist
 		case "l":
-		case "list":
+		case "list": {
 			ListMusics();
 			break;
+		}
 
-		default:
+		default: {
 			message.reply("comando não encontrado");
 			if (message.deletable) message.delete();
 			return;
+		}
+
 	}
 
 }
