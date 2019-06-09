@@ -13,7 +13,7 @@ exports.run = ({message, args, Logger}) => {
 			if (err) return Logger.log(err);
 
 			//Ler o help dos comandos
-			for (n in files) {
+			for (let n in files) {
 				let file = files[n];
 				if (!file.endsWith(".js")) continue;
 				let fileCach = require(`./${file}`);
