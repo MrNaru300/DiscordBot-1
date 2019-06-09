@@ -1,40 +1,35 @@
 const fs = require("fs");
 const http = require("https");
 
-module.exports = async (url, file, enconding, configs) => {
-	return data = new Promise((resolve, reject) => {
-		if (!enconding)
-			enconding = "utf8"
-		let options = configs || url
-		
-		http.get(options, res => {
-			
-			res.setEncoding(enconding);
-			let data = "";
+module.exports = async (url, file, enconding = "utf8", configs) => {
 
-			res.on("data", chunk => {
+	let options = configs || url
+	
+	let data = await new Promise ((res, rej) => {
+		http.get(options, response => {
+			response.setEncoding(enconding);
+			let data = "";
+			response.on("data", chunk => {
 				data += chunk;
 			})
-
-			res.on("end", () => {
+			response.on("end", () => {
 				if (file) {
 					fs.writeFile(file, data, enconding, err => {
 						if (err) {
 							console.log(err);
-							reject("File error:\n " + err);
+							rej("File error:\n " + err);
 						} else {
-							resolve(data);
+							res(data);
 						}
 					});
 				} else {
-					resolve(data);
+					res(data);
 				}
-
 			});
-
-			res.on("error", err => {
-				reject(err);
+			response.on("error", err => {
+				rej(err);
 			})
-		});
+		})
 	});
+	return data;
 }

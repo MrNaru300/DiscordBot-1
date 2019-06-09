@@ -46,6 +46,10 @@ const Logger = {
 		let prefix = "[Error]";
 		console.log(this.time() + prefix + message);
 		this.save(prefix + message);
+	},
+	JSON(message) {
+		console.log(this.time() + JSON.stringify(message));
+		this.save(JSON.stringify(message));
 	}
 }
 

@@ -3,7 +3,7 @@ const httpRequest = require("../utilits/httpRequest.js");
 const configs = require("../configs.json");
 
 
-exports.run = async ({message, args, server, Logger}) => {
+exports.run = async ({message, args, server, Logger, servers}) => {
 	
 	let sM = server.music;
 
@@ -28,34 +28,52 @@ exports.run = async ({message, args, server, Logger}) => {
 
 	//Adiciona as musicas na playlist
 	async function AddMusic(url) {
+		//Limite de músicas = 100
 		if (sM.playlist.length >= 100)
 			return false;
-		await ytdl.getBasicInfo(url, (err, info) => {
-			if (err) {
-				AutoDelete(message, "Erro ao adicionar a música",sM);
-				Logger.log(err);
-				return false;
-			}
-			if (info.status !== "ok") return AutoDelete(message, "Não foi possivel baixar o video. Status:" + info.status, sM);
+		
+		await new Promise((res, rej) => {
+			ytdl.getBasicInfo(url)
+				.catch( (err) => {
+					//Erro ao acessar a url
+					AutoDelete(message, "Erro ao adicionar a música",sM);
+					Logger.log(err);
+					rej(err);
+				})
+				.then( (info) => {
+					//Erro ao baixar a musica
+					if (info.status !== "ok") return AutoDelete(message, "Não foi possivel baixar o video. Status:" + info.status, sM);
 
-			let basicInfo = {
-				title: info.title,
-				url: info.video_url,
-				baseURL: info.baseUrl,
-				id: info.video_id,
-				name: info.title,
-				author: info.author
-			}
+					//adicionando musica
+					let basicInfo = {
+						title: info.title,
+						url: info.video_url,
+						baseURL: info.baseUrl,
+						id: info.video_id,
+						name: info.title,
+						author: info.author
+					}
 
-			sM.playlist.push(basicInfo);
+					servers[server.id].music.playlist.push(basicInfo);
+					res(basicInfo)
+				}
 			
+			)
 		});
 		return true;
 	}
 	
 	//Deletar as mesnagens de musica
 	async function AutoDelete (send, timeOut = 20) {
-		let sended = await message.channel.send(send);
+		let sended = await new Promise((res, rej) => {
+			message.channel.send(send)
+				.catch(err => {
+					rej(err)
+				})
+				.then(sended => {
+					res(sended)
+				})
+		});
 		setTimeout( (sended) => {if (sended.deletable) sended.delete()}, timeOut*1000, sended);
 		if (message.deletable) message.delete();
 		return;
@@ -71,7 +89,7 @@ exports.run = async ({message, args, server, Logger}) => {
 					"icon_url": "https://yt3.ggpht.com/a-/AAuE7mCRnX1QiX2U8rv05JW4zbaJMB80Y5eWI1HfTg=s900-mo-c-c0xffffffff-rj-k-no"
 				},
 				"description": "-------------------",
-				"footer": {"text": "Digite help para mostra a lista de comandos"},
+				"footer": {"text": "Digite help para mostrar a lista de comandos"},
 				"color": 15214375,
 				"fields": [ 
 				]
@@ -115,7 +133,7 @@ exports.run = async ({message, args, server, Logger}) => {
 		}
 
 		//Mostrar a lista e deletar a mensagem do usuário
-		AutoDelete(reply, 120);
+		AutoDelete(reply, 20);
 
 	}
 
@@ -173,29 +191,64 @@ exports.run = async ({message, args, server, Logger}) => {
 				temp[split[0]] = split[1];
 			}
 			tags = temp;
+			
+
+			//Verifica se é um único video 
+			if (tags["v"]) { 
+				await new Promise( (res , rej) => {
+					AddMusic(args[1])
+					.catch(err => {
+						rej(err);
+					})
+					.then(info => {
+						res(info);
+					})
+				})
+			} 
 
 			//Verifica se é uma playlist
 			if (tags["list"]) {
 
-				//API do youtube para playlists
-				httpRequest(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=50&playlistId=${tags["list"]}&key=${configs.ytKey}`)
-				.catch(() => {AutoDelete("Video não encontrado")})
-				.then( async (playlist) => {
-					if (playlist.errors)
-						return AutoDelete("Video não encontrado");
-					playlist = JSON.parse(playlist);
-					for (let video of playlist.items) {
-							await AddMusic("https://www.youtube.com/watch?v="+video.contentDetails.videoId);
-					}
-					AutoDelete("Playlist adicionada", 10);
-				});
-			
-				
-			} else if (tags["v"]) { //Verifica se é um único video
-				await AddMusic(args[1]);
-				ListMusics();
-			} else {
+				//API do youtube para playlist´s
+				await new Promise ((res, rej) => {httpRequest(`https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&maxResults=20&playlistId=${tags["list"]}&key=${configs.ytKey}`)
+					
+					.catch((err) => {
+						AutoDelete("Video não encontrado")
+						rej(err);
+					})
+
+					.then( async (playlist) => {
+						//Erro ao acessar a play list
+						if (playlist.errors)
+							return AutoDelete("Video não encontrado");
+
+						//Salvar todas as musicas
+						playlist = JSON.parse(playlist);
+						let videos = [];
+						for (let video of playlist.items) {
+							if (video.contentDetails.videoId !== tags["v"]) {
+								videos.push(new Promise( (resolve , reject) => {
+									AddMusic("https://www.youtube.com/watch?v=" + video.contentDetails.videoId)
+									.catch(err => {
+										reject(err);
+									})
+									.then(info => {
+										resolve(info);
+									})
+								}))
+							}
+						}
+						await Promise.all(videos);
+						AutoDelete("Playlist adicionada", 20);
+						res(true)
+					});
+				})
+			}
+			//Video não encontrado
+			if (!tags["v"] && !tags["list"]) {
 				AutoDelete("Video não encontrado");
+			} else {
+				ListMusics();
 			}
 			break;
 		}
@@ -250,7 +303,7 @@ exports.run = async ({message, args, server, Logger}) => {
 		case "s":
 		case "stop": {
 			if (!sM.playingMusic)
-				AutoDelete("Nenhuma música na lista");
+				AutoDelete("Todas as músicas foram removidas da lista");
 			sM.playlist.unshift(sM.playingMusic);
 			break;
 		}
